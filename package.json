@@ -1,0 +1,22 @@
+{
+  "name": "ws2801rpi",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jhfdevelop/ws2801rpi.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jhfdevelop/ws2801rpi/issues"
+  },
+  "homepage": "https://github.com/jhfdevelop/ws2801rpi#readme",
+  "dependencies": {
+    "rpi-ws2801": "0.0.4"
+  }
+}
