@@ -13,7 +13,7 @@ const rest = {
         http.createServer((req, res) => {
             let url = req.url.replace(new RegExp('/$'),'')
             
-            if(routes.hasOwnProperty(url) && this.routes[url].verb.toUpper() == req.method.toUpperCase()){
+            if(this.routes.hasOwnProperty(url) && this.routes[url].verb.toUpper() == req.method.toUpperCase()){
                 this.routes[url].fn(req, res)
             }else{
                 this._404Response(res)
