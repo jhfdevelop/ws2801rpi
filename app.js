@@ -13,22 +13,22 @@ function init(){
 
 function _registerCallbacks(){
 
-    rest.registerCallback('color/fill',{
+    rest.registerCallback('/color/fill',{
         method:'POST',
         fn: (req, res) => _singleColorCallback(req, res)
     })
 
-    rest.registerCallback('color/gradient',{
+    rest.registerCallback('/color/gradient',{
         method:'POST',
         fn: (req, res) => _gradientCallback(req, res)
     })
 
-    rest.registerCallback('color/rainbow',{
+    rest.registerCallback('/color/rainbow',{
         method:'POST',
         fn: (req, res) => _rainbowCallback(req, res)
     })
 
-    rest.registerCallback('color/status',{
+    rest.registerCallback('/color/status',{
         method:'GET',
         fn: (req, res) => _statusResponse(req, res)
     })
