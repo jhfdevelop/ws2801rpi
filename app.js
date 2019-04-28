@@ -89,21 +89,34 @@ function _rainbowCallback(req, res){
 }
 
 function _calculateGradient(start, end){
-    let deltaRed = Math.ceil((end[0]-start[0])/ledCount)
-    let deltaGreen = Math.ceil((end[1]-start[1])/ledCount)
-    let deltaBlue = Math.ceil((end[2]-start[2])/ledCount)
+    let stepRed = _linspace(start[0], end[0], ledCount)
+    let stepGreen = _linspace(start[1], end[1], ledCount)
+    let stepBlue = _linspace(start[2], end[2], ledCount)
 
     let values = []    
 
     let currentPixel = start.slice()
-   
-    for(let index = 0;index<ledCount; index++){
+    for (let i = 0; i < ledCount; i++) {
+        currentPixel[0] = Math.round(stepRed[i])
+        currentPixel[1] = Math.round(stepGreen[i])
+        currentPixel[2] = Math.round(stepBlue[i])
         values.push(currentPixel.slice())
-        currentPixel[0] += deltaRed
-        currentPixel[1] += deltaGreen
-        currentPixel[2] += deltaBlue
     }
     return values
+}
+
+function _linspace(start, end, count){
+    if (!count) { count = Math.max(Math.round(end - start), 1) }
+    if (count < 2) { return count === 1 ? [start] : [] }
+
+    let output = Array(count)
+    count--
+
+    for (let i = count; i >= 0; i--) {
+        output[i] = (i * end + (count - i) * start) / count
+    }
+
+    return output
 }
 
 function _statusResponse(req, res) {

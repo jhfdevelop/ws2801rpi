@@ -3,20 +3,19 @@ const http = require('http')
 const rest = {
 
     routes:{
-        'color/fill':null,
-        'color/gradient':null,
-        'color/rainbow':null,
-        'color/status':null
+        '/color/fill':null,
+        '/color/gradient':null,
+        '/color/rainbow':null,
+        '/color/status':null
     },
 
     startup:function(port){
         http.createServer((req, res) => {
             let url = req.url.replace(new RegExp('/$'),'')
-            
-            if(this.routes.hasOwnProperty(url) && this.routes[url].verb.toUpper() == req.method.toUpperCase()){
+            if(this.routes.hasOwnProperty(url) && this.routes[url].verb.toUpperCase() == req.method.toUpperCase()){
                 this.routes[url].fn(req, res)
             }else{
-                this._404Response(res)
+                this._404Response(req, res)
             }
         }).listen(port)
 
@@ -53,7 +52,7 @@ const rest = {
     },
 
     registerCallback(key, fun){
-        routes[key] = fun
+        this.routes[key] = fun
     },
     
     _404Response: function (req, res) {
