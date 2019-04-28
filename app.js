@@ -14,22 +14,22 @@ function init(){
 function _registerCallbacks(){
 
     rest.registerCallback('/color/fill',{
-        method:'POST',
+        verb:'POST',
         fn: (req, res) => _singleColorCallback(req, res)
     })
 
     rest.registerCallback('/color/gradient',{
-        method:'POST',
+        verb:'POST',
         fn: (req, res) => _gradientCallback(req, res)
     })
 
     rest.registerCallback('/color/rainbow',{
-        method:'POST',
+        verb:'POST',
         fn: (req, res) => _rainbowCallback(req, res)
     })
 
     rest.registerCallback('/color/status',{
-        method:'GET',
+        verb:'GET',
         fn: (req, res) => _statusResponse(req, res)
     })
 }
