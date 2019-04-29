@@ -126,11 +126,9 @@ function _linspace(start, end, count) {
 }
 
 function _rainbow() {
-    let hue_step = 360 / ledCount
-    let rainbow = Array(ledCount)
-
-    for (let hue = 0; hue < 360; hue += hue_step) {
-
+    let hue_step = Math.floor(256 / ledCount)
+    let rainbow = []
+    for (let hue = 0; hue < 256; hue += hue_step) {
         if (hue < 85) {
             rainbow.push([hue * 3, 255 - hue * 3, 0])
         } else if (hue < 170) {
