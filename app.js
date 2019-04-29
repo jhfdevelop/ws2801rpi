@@ -7,6 +7,11 @@ function init(){
     ws2801.connect(ledCount)
     console.log('ws2801 is ready')
 
+    _rainbow().forEach((pxl, index) => {
+        ws2801.setColor(index, pxl)
+        console.log(pxl)
+    })
+
     _registerCallbacks()
     rest.startup(2684)
 }
@@ -129,41 +134,12 @@ function _rainbow(){
         let x = c * (1 - (hue / 60) % 2 - 1)
         let m = 1 - c
 
-        if (hue < 60) {
-            let r = (c + m) * 255
-            let g = (x + m) * 255
-            let b = (0 + m) * 255
-            rainbow.push([r, g, b])
-
-        } else if (hue >= 60 && hue < 120) {
-            let r = (x + m) * 255
-            let g = (c + m) * 255
-            let b = (0 + m) * 255
-            rainbow.push([r, g, b])
-        }
-        else if (hue >= 120 && hue < 180) {
-            let r = (0 + m) * 255
-            let g = (c + m) * 255
-            let b = (x + m) * 255
-            rainbow.push([r, g, b])
-        }
-        else if (hue >= 180 && hue < 240) {
-            let r = (0 + m) * 255
-            let g = (x + m) * 255
-            let b = (c + m) * 255
-            rainbow.push([r, g, b])
-        }
-        else if (hue >= 240 && hue < 300) {
-            let r = (x + m) * 255
-            let g = (0) * 255
-            let b = (c + m) * 255
-            rainbow.push([r, g, b])
-        }
-        else if (hue >= 300 && hue < 360) {
-            let r = (x + m) * 255
-            let g = (0) * 255
-            let b = (c + m) * 255
-            rainbow.push([r, g, b])
+        if (hue < 85) {
+            rainbow.push([hue * 3, 255 - hue * 3, 0])
+        }else if(hue < 170){
+            rainbow.push([255 - hue * 3, 0, hue * 3])
+        }else{
+            rainbow.push([0, hue * 3, 255 - hue * 3])
         }
     }
     return rainbow
