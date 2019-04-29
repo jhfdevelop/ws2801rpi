@@ -3,7 +3,7 @@ const rest = require('./rest')
 
 const ledCount = 32
 
-function init(){
+function init() {
     ws2801.connect(ledCount)
     console.log('ws2801 is ready')
 
@@ -16,66 +16,66 @@ function init(){
     rest.startup(2684)
 }
 
-function _registerCallbacks(){
+function _registerCallbacks() {
 
-    rest.registerCallback('/color/fill',{
-        verb:'POST',
+    rest.registerCallback('/color/fill', {
+        verb: 'POST',
         fn: (req, res) => _singleColorCallback(req, res)
     })
 
-    rest.registerCallback('/color/gradient',{
-        verb:'POST',
+    rest.registerCallback('/color/gradient', {
+        verb: 'POST',
         fn: (req, res) => _gradientCallback(req, res)
     })
 
-    rest.registerCallback('/color/rainbow',{
-        verb:'POST',
+    rest.registerCallback('/color/rainbow', {
+        verb: 'POST',
         fn: (req, res) => _rainbowCallback(req, res)
     })
 
-    rest.registerCallback('/color/status',{
-        verb:'GET',
+    rest.registerCallback('/color/status', {
+        verb: 'GET',
         fn: (req, res) => _statusResponse(req, res)
     })
 }
 
-async function _singleColorCallback(req, res){
+async function _singleColorCallback(req, res) {
 
     let data
 
-    try{
+    try {
         data = await rest.jsonData(req)
-    }catch(e){
-        rest.jsonResponse({'error':'request object must be json'}, res)
+    } catch (e) {
+        rest.jsonResponse({ 'error': 'request object must be json' }, res)
         return
     }
 
-    if(data.hasOwnProperty('value')){
+    if (data.hasOwnProperty('value')) {
         let values = Array(ledCount).fill([data.value[0], data.value[1], data.value[2]])
         values.forEach((value, index) => ws2801.setColor(index, value))
         ws2801.update()
         _statusResponse(req, res)
 
-    }else{
-        rest.jsonResponse({'error':'request object must contain the property value'}, res)
+    } else {
+        rest.jsonResponse({ 'error': 'request object must contain the property value' }, res)
     }
 }
 
-async function _gradientCallback(req, res){
+async function _gradientCallback(req, res) {
 
     let data
 
-    try{
+    try {
         data = await rest.jsonData(req)
-    }catch(e){
-        rest.jsonResponse({'error':'request object must be json'}, res)
+    } catch (e) {
+        rest.jsonResponse({ 'error': 'request object must be json' }, res)
         return
     }
 
-    if(data.hasOwnProperty('start') && data.hasOwnProperty('end')){
-        
+    if (data.hasOwnProperty('start') && data.hasOwnProperty('end')) {
+
         let gradient = _calculateGradient(data.start, data.end)
-        
+
         gradient.forEach((pxl, index) => {
             ws2801.setColor(index, pxl)
         })
@@ -83,23 +83,23 @@ async function _gradientCallback(req, res){
         ws2801.update()
         _statusResponse(req, res)
 
-    }else{
-        rest.jsonResponse({'error':'request object must contain the properties start and end'}, res)
+    } else {
+        rest.jsonResponse({ 'error': 'request object must contain the properties start and end' }, res)
     }
 }
 
-function _rainbowCallback(req, res){
+function _rainbowCallback(req, res) {
     _rainbow().forEach((pxl, index) => ws2801.setColor(index, pxl))
     ws2801.update()
     _statusResponse(req, res)
 }
 
-function _calculateGradient(start, end){
+function _calculateGradient(start, end) {
     let stepRed = _linspace(start[0], end[0], ledCount)
     let stepGreen = _linspace(start[1], end[1], ledCount)
     let stepBlue = _linspace(start[2], end[2], ledCount)
 
-    let values = []    
+    let values = []
 
     let currentPixel = start.slice()
     for (let i = 0; i < ledCount; i++) {
@@ -111,7 +111,7 @@ function _calculateGradient(start, end){
     return values
 }
 
-function _linspace(start, end, count){
+function _linspace(start, end, count) {
     if (!count) { count = Math.max(Math.round(end - start), 1) }
     if (count < 2) { return count === 1 ? [start] : [] }
 
@@ -125,21 +125,20 @@ function _linspace(start, end, count){
     return output
 }
 
-function _rainbow(){
-    let hue_step = 360/ledCount
+function _rainbow() {
+    let hue_step = 360 / ledCount
     let rainbow = Array(ledCount)
 
     for (let hue = 0; hue < 360; hue += hue_step) {
-        let c = 1*1
-        let x = c * (1 - (hue / 60) % 2 - 1)
-        let m = 1 - c
 
         if (hue < 85) {
             rainbow.push([hue * 3, 255 - hue * 3, 0])
-        }else if(hue < 170){
-            rainbow.push([255 - hue * 3, 0, hue * 3])
-        }else{
-            rainbow.push([0, hue * 3, 255 - hue * 3])
+        } else if (hue < 170) {
+            let p = hue - 85
+            rainbow.push([255 - p * 3, 0, p * 3])
+        } else {
+            let p = hue - 170
+            rainbow.push([0, p * 3, 255 - p * 3])
         }
     }
     return rainbow
