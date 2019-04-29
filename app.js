@@ -4,7 +4,7 @@ const rest = require('./rest')
 const ledCount = 32
 
 function init() {
-    ws2801.connect(ledCount)
+    ws2801.connect(ledCount, '/dev/spidev0.0')
     console.log('ws2801 is ready')
 
     _rainbow().forEach((pxl, index) => {
