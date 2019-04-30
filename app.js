@@ -12,6 +12,8 @@ function init() {
         console.log(pxl)
     })
 
+    ws2801.update()
+
     _registerCallbacks()
     rest.startup(2684)
 }
