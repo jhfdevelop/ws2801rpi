@@ -102,7 +102,7 @@ function _rainbowCallback(req, res, count) {
     _statusResponse(req, res)
 }
 
-function _calculateGradient(start, end) {
+function _calculateGradient(start, end, count) {
     let stepRed = _linspace(start[0], end[0], count)
     let stepGreen = _linspace(start[1], end[1], count)
     let stepBlue = _linspace(start[2], end[2], count)
