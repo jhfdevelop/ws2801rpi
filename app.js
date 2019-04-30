@@ -74,11 +74,17 @@ async function _gradientCallback(req, res) {
         return
     }
 
-    if (data.hasOwnProperty('start') && data.hasOwnProperty('end')) {
+    if (data.hasOwnProperty('stops') && data.stops.length > 0) {
+        
+        let fullGradient = []
+        let singleGradientSize = Math.floor(ledCount / data.stops.length)
+        let isOdd = (ledCount / data.stops.length) != singleGradientSize
+        for (let index = 0; index < data.stops.length-1; index++) {
+            let isLast = index === data.stops.length - 2
+            _calculateGradient(data.stops[index], data.stops[index + 1], singleGradientSize + (isOdd && isLast ? 1 : 0)).forEach(pxl => fullGradient.push(pxl))
+        }
 
-        let gradient = _calculateGradient(data.start, data.end)
-
-        gradient.forEach((pxl, index) => {
+        fullGradient.forEach((pxl, index) => {
             ws2801.setColor(index, pxl)
         })
 
@@ -86,25 +92,25 @@ async function _gradientCallback(req, res) {
         _statusResponse(req, res)
 
     } else {
-        rest.jsonResponse({ 'error': 'request object must contain the properties start and end' }, res)
+        rest.jsonResponse({ 'error': 'request object must contain the property \"stops\" and needs at least two values' }, res)
     }
 }
 
-function _rainbowCallback(req, res) {
+function _rainbowCallback(req, res, count) {
     _rainbow().forEach((pxl, index) => ws2801.setColor(index, pxl))
     ws2801.update()
     _statusResponse(req, res)
 }
 
 function _calculateGradient(start, end) {
-    let stepRed = _linspace(start[0], end[0], ledCount)
-    let stepGreen = _linspace(start[1], end[1], ledCount)
-    let stepBlue = _linspace(start[2], end[2], ledCount)
+    let stepRed = _linspace(start[0], end[0], count)
+    let stepGreen = _linspace(start[1], end[1], count)
+    let stepBlue = _linspace(start[2], end[2], count)
 
     let values = []
 
     let currentPixel = start.slice()
-    for (let i = 0; i < ledCount; i++) {
+    for (let i = 0; i < count; i++) {
         currentPixel[0] = Math.round(stepRed[i])
         currentPixel[1] = Math.round(stepGreen[i])
         currentPixel[2] = Math.round(stepBlue[i])
