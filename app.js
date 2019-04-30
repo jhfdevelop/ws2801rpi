@@ -130,13 +130,13 @@ function _rainbow() {
     let rainbow = []
     for (let hue = 0; hue < 256; hue += hue_step) {
         if (hue < 85) {
-            rainbow.push([hue * 3, 255 - hue * 3, 0])
+            rainbow.push([255 - hue * 3, hue*3, 0])
         } else if (hue < 170) {
             let p = hue - 85
-            rainbow.push([255 - p * 3, 0, p * 3])
+            rainbow.push([0, 255 - p * 3, p * 3])
         } else {
             let p = hue - 170
-            rainbow.push([0, p * 3, 255 - p * 3])
+            rainbow.push([p * 3, 0, 255 - p * 3])
         }
     }
     return rainbow
