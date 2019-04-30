@@ -74,15 +74,22 @@ async function _gradientCallback(req, res) {
         return
     }
 
-    if (data.hasOwnProperty('stops') && data.stops.length > 0) {
-        
+    if (data.hasOwnProperty('stops') && data.stops.length > 1) {
+
         let fullGradient = []
-        let singleGradientSize = Math.floor(ledCount / data.stops.length)
-        let isOdd = (ledCount / data.stops.length) != singleGradientSize
-        for (let index = 0; index < data.stops.length-1; index++) {
+        let singleGradientSize = Math.floor(ledCount / (data.stops.length - 1))
+        let isOdd = (ledCount / (data.stops.length - 1)) != singleGradientSize
+
+        console.log('size: ' + singleGradientSize)
+        console.log('odd?' + isOdd)
+
+        for (let index = 0; index < data.stops.length - 1; index++) {
             let isLast = index === data.stops.length - 2
+            console.log('gradient from ' + data.stops[index] + ' to ' + data.stops[index + 1] + ' len ' + (singleGradientSize + (isOdd && isLast ? 1 : 0)))
             _calculateGradient(data.stops[index], data.stops[index + 1], singleGradientSize + (isOdd && isLast ? 1 : 0)).forEach(pxl => fullGradient.push(pxl))
         }
+
+        console.log(fullGradient.length + ' gradientPixels')
 
         fullGradient.forEach((pxl, index) => {
             ws2801.setColor(index, pxl)
@@ -92,7 +99,7 @@ async function _gradientCallback(req, res) {
         _statusResponse(req, res)
 
     } else {
-        rest.jsonResponse({ 'error': 'request object must contain the property \"stops\" and needs at least two values' }, res)
+        rest.jsonResponse({ 'error': 'request object must contain the property \"stops\" and needs at least two color values' }, res)
     }
 }
 
@@ -138,7 +145,7 @@ function _rainbow() {
     let rainbow = []
     for (let hue = 0; hue < 256; hue += hue_step) {
         if (hue < 85) {
-            rainbow.push([255 - hue * 3, hue*3, 0])
+            rainbow.push([255 - hue * 3, hue * 3, 0])
         } else if (hue < 170) {
             let p = hue - 85
             rainbow.push([0, 255 - p * 3, p * 3])
