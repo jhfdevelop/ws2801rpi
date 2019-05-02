@@ -62,7 +62,7 @@ class WS2801 {
 
         if (data.hasOwnProperty('value')) {
             let values = Array(this.ledCount).fill([data.value[0], data.value[1], data.value[2]])
-            await this._fadeTo(values)
+            this._fadeTo(values)
             this._statusResponse(req, res)
 
         } else {
@@ -92,8 +92,8 @@ class WS2801 {
                 this._calculateGradient(data.stops[index], data.stops[index + 1], singleGradientSize + (isOdd && isLast ? 1 : 0)).forEach(pxl => fullGradient.push(pxl))
             }
 
-            await this._fadeTo(fullGradient)
-            _statusResponse(req, res)
+            this._fadeTo(fullGradient)
+            this._statusResponse(req, res)
 
         } else {
             rest.jsonResponse({ 'error': 'request object must contain the property \"stops\" and needs at least two color values' }, res)
@@ -101,12 +101,12 @@ class WS2801 {
     }
 
     async _rainbowCallback(req, res) {
-        await this._fadeTo(this._rainbow())
-        _statusResponse(req, res)
+        this._fadeTo(this._rainbow())
+        this._statusResponse(req, res)
     }
 
     _calculateGradient(start, end, count) {
-        let pixels = this.pixelLinspace(start, end, count)
+        let pixels = this._pixelLinspace(start, end, count)
 
         let values = []
         let currentPixel = start.slice()
@@ -165,7 +165,7 @@ class WS2801 {
         let linspaces = []
 
         this.values.forEach((pxl, index) => {
-            linspaces.push(this.pixelLinspace(pxl, to[index], steps))
+            linspaces.push(this._pixelLinspace(pxl, to[index], steps))
         })
 
         for (let step = 0; step < steps; step++) {
@@ -176,7 +176,9 @@ class WS2801 {
                 ws2801.setColor(index, [r, g, b])
             })
             ws2801.update()
+	    await new Promise((resolve, reject) => {setTimeout(()=>resolve(),100)})
         }
+        this.values = to.slice()
     }
 
     _pixelLinspace(start, end, count) {

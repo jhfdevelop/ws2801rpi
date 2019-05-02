@@ -1,0 +1,9 @@
+version: "3.7"
+
+services:
+    ws2801rpi:
+        image: "ws2801:latest"
+        restart: "unless-stopped"
+        ports:
+            - 2684:3000
+
