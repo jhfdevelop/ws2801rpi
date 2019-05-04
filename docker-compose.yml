@@ -2,8 +2,14 @@ version: "3.7"
 
 services:
     ws2801rpi:
-        image: "ws2801:latest"
-        restart: "unless-stopped"
+        image: "djhofmann/ws2801:latest"
+        restart: "always"
+        privileged: true
         ports:
-            - 2684:3000
+            - 3000:2684
+        volumes:
+            - /sys/:/sys/
+            - /lib/modules/:/lib/modules
+        devices:
+            - /dev/spidev0.0:/dev/spidev0.0
 
