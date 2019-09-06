@@ -1,4 +1,5 @@
-const ws2801 = require('rpi-ws2801')
+const WS2801Connect = require('ws2801-connect')
+const SoftSPI = require("rpi-softspi")
 const rest = require('./rest')
 
 const ledCount = 32
@@ -10,18 +11,31 @@ function init() {
 class WS2801 {
 
     constructor(ledCount) {
-        this.values = Array(ledCount)
+        this.values = Array(ledCount).fill([0,0,0])
         this.ledCount = ledCount
 
-        ws2801.connect(ledCount, '/dev/spidev0.0')
-        console.log('ws2801 is ready')
-
-        this._rainbow().forEach((pxl, index) => {
-            this.values[index] = pxl
-            ws2801.setColor(index, pxl)
+        this.spi = new SoftSPI({
+            clock: 23, // GPIO 3 - SCL
+            mosi: 19 // GPIO 2 - SDA
         })
 
-        ws2801.update()
+        this.spi.open()
+
+        let me = this
+        this.leds = new WS2801Connect({
+            count: 32,
+            spiWrite: (data) => { me.spi.write(data) }
+        })
+
+        console.log('ws2801 is ready')
+
+	//this._fadeTo(this._rainbow())
+        this.leds.fill([0,100,255])
+	this.leds.show()
+
+	this.values = Array(ledCount).fill([0,100,255])
+	this._fadeTo(Array(ledCount).fill([0,0,0]))
+
 
         this._registerCallbacks()
         rest.startup(2684)
@@ -56,7 +70,7 @@ class WS2801 {
         try {
             data = await rest.jsonData(req)
         } catch (e) {
-            rest.jsonResponse({ 'error': 'request object must be json' }, res)
+            rest.jsonResponse({'error': 'request object must be json'}, res)
             return
         }
 
@@ -66,7 +80,7 @@ class WS2801 {
             this._statusResponse(req, res)
 
         } else {
-            rest.jsonResponse({ 'error': 'request object must contain the property value' }, res)
+            rest.jsonResponse({'error': 'request object must contain the property value'}, res)
         }
     }
 
@@ -77,7 +91,7 @@ class WS2801 {
         try {
             data = await rest.jsonData(req)
         } catch (e) {
-            rest.jsonResponse({ 'error': 'request object must be json' }, res)
+            rest.jsonResponse({'error': 'request object must be json'}, res)
             return
         }
 
@@ -85,7 +99,7 @@ class WS2801 {
 
             let fullGradient = []
             let singleGradientSize = Math.floor(this.ledCount / (data.stops.length - 1))
-            let isOdd = (this.ledCount / (data.stops.length - 1)) != singleGradientSize
+            let isOdd = (this.ledCount / (data.stops.length - 1)) !== singleGradientSize
 
             for (let index = 0; index < data.stops.length - 1; index++) {
                 let isLast = index === data.stops.length - 2
@@ -96,7 +110,7 @@ class WS2801 {
             this._statusResponse(req, res)
 
         } else {
-            rest.jsonResponse({ 'error': 'request object must contain the property \"stops\" and needs at least two color values' }, res)
+            rest.jsonResponse({'error': 'request object must contain the property \"stops\" and needs at least two color values'}, res)
         }
     }
 
@@ -121,8 +135,12 @@ class WS2801 {
     }
 
     _linspace(start, end, count) {
-        if (!count) { count = Math.max(Math.round(end - start), 1) }
-        if (count < 2) { return count === 1 ? [start] : [] }
+        if (!count) {
+            count = Math.max(Math.round(end - start), 1)
+        }
+        if (count < 2) {
+            return count === 1 ? [start] : []
+        }
 
         let output = Array(count)
         count--
@@ -159,7 +177,9 @@ class WS2801 {
     }
 
     async _fadeTo(to, steps) {
-        if (!steps) { steps = 50 }
+        if (!steps) {
+            steps = 50
+        }
 
         //every pixel gets one linespace
         let linspaces = []
@@ -173,10 +193,12 @@ class WS2801 {
                 let r = linspace[0][step]
                 let g = linspace[1][step]
                 let b = linspace[2][step]
-                ws2801.setColor(index, [r, g, b])
+                this.leds.setLight(index, r, g, b)
             })
-            ws2801.update()
-	    await new Promise((resolve, reject) => {setTimeout(()=>resolve(),100)})
+            this.leds.show()
+            await new Promise((resolve, reject) => {
+                setTimeout(() => resolve(), 100)
+            })
         }
         this.values = to.slice()
     }
@@ -191,7 +213,7 @@ class WS2801 {
 
     _statusResponse(req, res) {
         rest.jsonResponse({
-            data: ws2801.values.values()
+            data: this.values
         }, res)
     }
 }

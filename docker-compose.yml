@@ -11,5 +11,5 @@ services:
             - /sys/:/sys/
             - /lib/modules/:/lib/modules
         devices:
-            - /dev/spidev0.0:/dev/spidev0.0
+            - /dev/spidev0.1:/dev/spidev0.0
 

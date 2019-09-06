@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/jhfdevelop/ws2801rpi#readme",
   "dependencies": {
-    "rpi-ws2801": "0.0.4"
+    "rpi-softspi": "^1.0.5",
+    "ws2801-connect": "^1.2.2"
   }
 }
