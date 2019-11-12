@@ -76,7 +76,7 @@ class WS2801 {
                 this._fadeTo(Array(ledCount).fill(json.value))
                 break
             case 'rainbow':
-                this._setGradient(defaultRainbow)
+                this._setGradient({stops: defaultRainbow})
                 break
             default:
                 console.log('client did not understand data from server')
