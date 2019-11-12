@@ -46,7 +46,7 @@ class WS2801 {
 
         c.onServerFound(address => {
             this.isConnected = true
-
+            this._setupWSClient(address)
         })
 
         this._discoveryLoop()
@@ -60,6 +60,7 @@ class WS2801 {
     }
 
     _setupWSClient(address) {
+        console.log(`connecting to discoverd ws server ${address}`)
         const ws = new WebSocket(address)
         ws.on('message', data => this._parseWSData(data, ws))
     }
