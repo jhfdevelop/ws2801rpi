@@ -22,7 +22,7 @@ class BroadcastConnector {
         this.client.on('message', (message, remote) => this._onMessage(message, remote))
 
         this.info = {
-            type: 'ui'
+            type: 'ws2801'
         }
 
         this._found = false
@@ -31,7 +31,7 @@ class BroadcastConnector {
 
     }
 
-    restart(){
+    restart() {
         this._found = false
         this._discoveryLoop()
     }

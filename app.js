@@ -1,8 +1,10 @@
 const WS2801Connect = require('ws2801-connect')
 const SoftSPI = require("rpi-softspi")
-const rest = require('./rest')
+const BroadcastConnector = require('./broadcastConnector')
+const WebSocket = require('ws')
 
 const ledCount = 32
+const defaultRainbow = ['#f79533', '#f37055', '#ef4e7b', '#a166ab', '#5073b8', '#1098ad', '#07b39b', '#6fba82']
 
 function init() {
     new WS2801(ledCount)
@@ -11,7 +13,7 @@ function init() {
 class WS2801 {
 
     constructor(ledCount) {
-        this.values = Array(ledCount).fill([0,0,0])
+        this.values = Array(ledCount).fill([0, 0, 0])
         this.ledCount = ledCount
 
         this.spi = new SoftSPI({
@@ -24,99 +26,74 @@ class WS2801 {
         let me = this
         this.leds = new WS2801Connect({
             count: 32,
-            spiWrite: (data) => { me.spi.write(data) }
+            spiWrite: (data) => {
+                me.spi.write(data)
+            }
         })
 
         console.log('ws2801 is ready')
 
-	//this._fadeTo(this._rainbow())
-        this.leds.fill([0,100,255])
-	this.leds.show()
+        this.leds.fill([0, 0, 0])
+        this.leds.show()
 
-	this.values = Array(ledCount).fill([0,100,255])
-	this._fadeTo(Array(ledCount).fill([0,0,0]))
-
-
-        this._registerCallbacks()
-        rest.startup(2684)
+        this.isConnected = false
+        this._discoverServer()
     }
 
-    _registerCallbacks() {
-        rest.registerCallback('/color/fill', {
-            verb: 'POST',
-            fn: (req, res) => this._singleColorCallback(req, res)
+    _discoverServer() {
+        const c = new BroadcastConnector()
+        c.setInterval(5000)
+
+        c.onServerFound(address => {
+            this.isConnected = true
+
         })
 
-        rest.registerCallback('/color/gradient', {
-            verb: 'POST',
-            fn: (req, res) => this._gradientCallback(req, res)
-        })
-
-        rest.registerCallback('/color/rainbow', {
-            verb: 'POST',
-            fn: (req, res) => this._rainbowCallback(req, res)
-        })
-
-        rest.registerCallback('/color/status', {
-            verb: 'GET',
-            fn: (req, res) => this._statusResponse(req, res)
-        })
+        this._discoveryLoop()
     }
 
-    async _singleColorCallback(req, res) {
-
-        let data
-
-        try {
-            data = await rest.jsonData(req)
-        } catch (e) {
-            rest.jsonResponse({'error': 'request object must be json'}, res)
-            return
-        }
-
-        if (data.hasOwnProperty('value')) {
-            let values = Array(this.ledCount).fill([data.value[0], data.value[1], data.value[2]])
-            this._fadeTo(values)
-            this._statusResponse(req, res)
-
-        } else {
-            rest.jsonResponse({'error': 'request object must contain the property value'}, res)
+    async _discoveryLoop() {
+        while (!this.isConnected) {
+            await this._fadeTo(Array(ledCount).fill([0, 100, 255]))
+            await this._fadeTo(Array(ledCount).fill([0, 0, 0]))
         }
     }
 
-    async _gradientCallback(req, res) {
+    _setupWSClient(address) {
+        const ws = new WebSocket(address)
+        ws.on('message', data => this._parseWSData(data, ws))
+    }
 
-        let data
+    _parseWSData(data, ws) {
+        const json = JSON.parse(data)
 
-        try {
-            data = await rest.jsonData(req)
-        } catch (e) {
-            rest.jsonResponse({'error': 'request object must be json'}, res)
-            return
-        }
-
-        if (data.hasOwnProperty('stops') && data.stops.length > 1) {
-
-            let fullGradient = []
-            let singleGradientSize = Math.floor(this.ledCount / (data.stops.length - 1))
-            let isOdd = (this.ledCount / (data.stops.length - 1)) !== singleGradientSize
-
-            for (let index = 0; index < data.stops.length - 1; index++) {
-                let isLast = index === data.stops.length - 2
-                this._calculateGradient(data.stops[index], data.stops[index + 1], singleGradientSize + (isOdd && isLast ? 1 : 0)).forEach(pxl => fullGradient.push(pxl))
-            }
-
-            this._fadeTo(fullGradient)
-            this._statusResponse(req, res)
-
-        } else {
-            rest.jsonResponse({'error': 'request object must contain the property \"stops\" and needs at least two color values'}, res)
+        switch (json.type) {
+            case 'gradient':
+                this._setGradient(data)
+                break
+            case 'fill':
+                this._fadeTo(Array(ledCount).fill(json.value))
+                break
+            case 'rainbow':
+                this._setGradient(defaultRainbow)
+                break
+            default:
+                console.log('client did not understand data from server')
+                console.log(json)
         }
     }
 
-    async _rainbowCallback(req, res) {
-        this._fadeTo(this._rainbow())
-        this._statusResponse(req, res)
+    async _setGradient(data) {
+        let fullGradient = []
+        let singleGradientSize = Math.floor(this.ledCount / (data.stops.length - 1))
+        let isOdd = (this.ledCount / (data.stops.length - 1)) !== singleGradientSize
+
+        for (let index = 0; index < data.stops.length - 1; index++) {
+            let isLast = index === data.stops.length - 2
+            this._calculateGradient(data.stops[index], data.stops[index + 1], singleGradientSize + (isOdd && isLast ? 1 : 0)).forEach(pxl => fullGradient.push(pxl))
+        }
+
+        this._fadeTo(fullGradient)
     }
 
     _calculateGradient(start, end, count) {
@@ -209,12 +186,6 @@ class WS2801 {
         let stepBlue = this._linspace(start[2], end[2], count)
 
         return [stepRed, stepGreen, stepBlue]
-    }
-
-    _statusResponse(req, res) {
-        rest.jsonResponse({
-            data: this.values
-        }, res)
     }
 }
 
