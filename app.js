@@ -4,7 +4,7 @@ const BroadcastConnector = require('./broadcastConnector')
 const WebSocket = require('ws')
 
 const ledCount = 32
-const defaultRainbow = ['#f79533', '#f37055', '#ef4e7b', '#a166ab', '#5073b8', '#1098ad', '#07b39b', '#6fba82']
+const defaultRainbow = [[247, 149, 51], [243, 112, 85], [239, 78, 123], [161, 102, 171], [80, 115, 184], [16, 152, 173], [7, 179, 155], [111, 186, 130]]
 
 function init() {
     new WS2801(ledCount)
